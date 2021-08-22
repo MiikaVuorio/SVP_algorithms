@@ -51,7 +51,25 @@ def add_perturbation(S, K, n):
         v_perturbations.append(v_perturbation)
     return perturbed, v_perturbations
 
+def packing_balls(paralellepiped_basis):
 
+    circ_centres = []
+    for divisor in range(8):
+        new_cent = paralellepiped_basis[0] * (divisor / 8)
+        circ_centres.append(new_cent)
+    for basis in range(1, len(paralellepiped_basis)):
+        new_vecs = []
+        for vecs in range(1, 8):
+            new_vec = paralellepiped_basis[basis] * (vecs / 8)
+            new_vecs.append(new_vec)
+        new_comb_vecs = []
+        for v in range(len(circ_centres)):
+            for n in range(len(new_vecs)):
+                new_comb_vecs.append(circ_centres[v] + new_vecs[n])
+        for vec in new_comb_vecs:
+            circ_centres.append(vec)
+
+    return circ_centres
 
 def sample_vectors(L, n, D, K):
     orthonormal_basis = np.identity(n)
@@ -60,11 +78,9 @@ def sample_vectors(L, n, D, K):
     fi_int_L_basis = np.rint(fi_in_lattice_basis)
     each_sample_point = each_vec(fi_int_L_basis)
     perturbed_samples, perturbations = add_perturbation(each_sample_point, K, n)
-
-
-
-
-
+    p_in_standard_basis = np.matmul(fi_int_L_basis, L)
+    circ_centres = packing_balls(p_in_standard_basis)
+    print(circ_centres)
 
 
 L = np.array([[1, 0], [1, 1]])
