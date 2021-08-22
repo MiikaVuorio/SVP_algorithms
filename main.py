@@ -1,8 +1,9 @@
 import numpy as np
 import random
+import math
 
 n = 2
-c_0 = 2
+c_0 = 12
 c_3 = 2
 c_5 = 4 * c_3
 D = 2 ** (c_0 * n)
@@ -12,7 +13,7 @@ start_vector_count = -1  #check what this number should be from the paper
 min_num_vectors = 2 * 8 ** n
 
 
-def each_vec(B, dimensions):
+def unitary_random_vectors(B):
     while True:
         rando_vec = np.zeros(2)
         for d in B:
@@ -21,35 +22,33 @@ def each_vec(B, dimensions):
                 np.insert(new_vec, random.randint(0, v))
             rando_vec += new_vec
 
-    # CONTINUE HERE check that rando_vec belongs into le parallelepiped then add rando_vecs until some N, for now maybe 10 times min vec count
-
-    # gcds = []
-    # print(B)
-    #
-    # for i in range(len(B)):
-    #     values = B[i].tolist()
-    #     spot = 0
-    #     for num in values:
-    #         values[spot] = int(num)
-    #         spot += 1
-    #
-    #     gcds.append(np.gcd.reduce(values))
-    # print(gcds)
-    # vec_points = []
-    # for vecs in range(gcds[0] + 1):
-    #     new_vec = B[0] * (vecs / gcds[0])
-    #     vec_points.append(new_vec)
-    # for basis in range(1, len(B)):
-    #     new_vecs = []
-    #     for vecs in range(1, gcds[basis] + 1):
-    #         new_vec = B[basis] * (vecs / gcds[basis])
-    #         new_vecs.append(new_vec)
-    #     new_comb_vecs = []
-    #     for v in range(len(vec_points)):
-    #         for n in range(len(new_vecs)):
-    #             new_comb_vecs.append(vec_points[v] + new_vecs[n])
-    #     for vec in new_comb_vecs:
-    #         vec_points.append(vec)
+def each_vec(B, dimensions):
+    gcds = []
+    print(B)
+    for i in range(len(B)):
+        values = B[i].tolist()
+        spot = 0
+        for num in values:
+            values[spot] = int(abs(num))
+            spot += 1
+        print(values)
+        gcds.append(np.gcd.reduce(values))
+    print(gcds)
+    vec_points = []
+    for vecs in range(gcds[0] + 1):
+        new_vec = B[0] * (vecs / gcds[0])
+        vec_points.append(new_vec)
+    for basis in range(1, len(B)):
+        new_vecs = []
+        for vecs in range(1, gcds[basis] + 1):
+            new_vec = B[basis] * (vecs / gcds[basis])
+            new_vecs.append(new_vec)
+        new_comb_vecs = []
+        for v in range(len(vec_points)):
+            for n in range(len(new_vecs)):
+                new_comb_vecs.append(vec_points[v] + new_vecs[n])
+        for vec in new_comb_vecs:
+            vec_points.append(vec)
 
     min_num = 2 * 8 ** dimensions
     print(len(vec_points))
