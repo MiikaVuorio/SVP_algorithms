@@ -113,8 +113,8 @@ def add_perturbation(S, K, n):
 
 def packing_balls(paralellepiped_basis):
     circ_centres = []
-    for divisor in range(8):
-        new_cent = paralellepiped_basis[0] * (divisor / 8) + paralellepiped_basis[0] / 16
+    for numerator in range(8):
+        new_cent = paralellepiped_basis[0] * (numerator / 8) + paralellepiped_basis[0] / 16
         circ_centres.append(new_cent)
     for basis in range(1, len(paralellepiped_basis)):
         new_vecs = []
@@ -131,15 +131,18 @@ def packing_balls(paralellepiped_basis):
     return circ_centres
 
 
-def assign_vectors(circ_centres, vectors, R):
+def assign_vectors(circ_centres, vectors, R, n):
     r = R / 4
+
+    # print(len(circ_centres))
 
     assigned_centres = []
     vec_index = 0
     centre_dic = {}
     for i in range(len(circ_centres)):
         centre_dic[i] = []
-        #print(circ_centres[i])
+    #print(centre_dic)
+    #print(len(circ_centres))
     for v in vectors:
         centre_index = 0
         for centre in circ_centres:
@@ -149,9 +152,11 @@ def assign_vectors(circ_centres, vectors, R):
                 vec_index += 1
                 break
             centre_index += 1
-            if centre_index == 63:
-                pass
+            if centre_index == 8**n:
+                print(v)
 
+                raise Exception("This ain't supposed to happen")
+    #print(len(centre_dic))
     return assigned_centres, centre_dic
 
 
@@ -214,6 +219,41 @@ def sieve(current_xis, current_ais, zis, no_reps, reps):
 
     return current_xis, new_ais, zis
 
+def post_sieve_ball_fun(R, n):
+
+    ball_centres_per_dimension = []
+    ball_centres = []
+    for dimension in range(n):
+        ball_centres_per_dimension.append([])
+        for multiplier in range(8):
+            ball_place = np.zeros(n)
+            ball_place[dimension] = -R*7/16 + R * multiplier/8
+            ball_centres_per_dimension[dimension].append(ball_place)
+
+    final_ball_centres = []
+    for bb in ball_centres_per_dimension[0]:
+        ball_centres.append(bb)
+    for bingobing in range(n-1):
+        final_ball_centres = []
+        for b in ball_centres_per_dimension[bingobing + 1]:
+            #print(len(ball_centres))
+            for ball in ball_centres:
+                king = ball+b
+                final_ball_centres.append(king)
+                # print(king)
+                # print(len(final_ball_centres))
+        ball_centres = []
+        for biko in final_ball_centres:
+            ball_centres.append(biko)
+        # print(ball_centres)
+        # print(len(ball_centres))
+        # print(bingobing)
+    #print(len(final_ball_centres))
+    #print(final_ball_centres)
+    return final_ball_centres
+
+
+
 
 def sample_vectors(L, n, D, K, c_5, min_num_vectors):
     orthonormal_basis = np.identity(n)
@@ -236,7 +276,8 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
     # long_line = parallelepiped_in_standard_basis[0] + parallelepiped_in_standard_basis[1]
     # print(long_line)
     # print(np.linalg.norm(long_line))
-    centre_indexes, centre_dic = assign_vectors(circ_centres, perturbed_in_standard_basis, R)
+    print(type(perturbed_in_standard_basis))
+    centre_indexes, centre_dic = assign_vectors(circ_centres, perturbed_in_standard_basis, R, n)
     no_reps, reps = choose_reps(centre_dic, min_num_vectors)
 
     current_ais = {}
@@ -268,10 +309,24 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
         if smalls == len(survivors):
             break
         else:
-            no_reps, reps = choose_reps(no_reps, min_num_vectors)
-            # print(len(current_zis.keys()))
-            # print(len(current_ais.keys()))
-            # print(len(current_xis.keys()))
+            R = R/2
+            current_xis_minus_ais = []
+            for key in current_xis.keys():
+                current_xis_minus_ais.append(current_xis[key] - current_ais[key])
+
+            # pp = []
+            # for b in range(len(parallelepiped_in_standard_basis)):
+            #     basis_vec = np.zeros(n)
+            #     basis_vec[b] = R
+            #     pp = pp.append(basis_vec)
+
+            circ_centres = post_sieve_ball_fun(R, n)
+            print("circ_centres run")
+            print(type(current_xis_minus_ais))
+            centr_int, centre_dictionary = assign_vectors(circ_centres, current_xis_minus_ais, R, n)
+            print("assign_vectors worky")
+            no_reps, reps = choose_reps(centre_dictionary, min_num_vectors)
+            print("all workin till here?")
             current_xis, current_ais, current_zis = sieve(current_xis, current_ais, current_zis, no_reps, reps)
 
     possible_vectors = []
@@ -291,7 +346,7 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
             sh_vec = vector
             #og_key = original_vector[it_index]
         #it_index += 1
-
+    print(len(sh_vec))
     print(sh_vec)
     print(sh_len)
     #print(each_sample_point[og_key])
