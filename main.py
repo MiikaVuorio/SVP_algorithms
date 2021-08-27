@@ -3,7 +3,7 @@ import random
 import math
 
 test = np.array([[1/math.sqrt(2), 1/math.sqrt(2)], [1,-1]])
-L = np.array([[4, 1, 1], [5, 2, 2], [3, 1, 3]])
+L = np.array([[4, 1, 1, 1], [5, 2, 2, 1], [3, 1, 3, 1], [2,5,6,1]])
 n = len(L[0])
 c_0 = 2
 c_3 = 2
@@ -51,8 +51,7 @@ def unitary_random_vectors(B, L, N, n):
             # print("REJECTED")
             # print(rando_vec)
             pass
-
-
+        print(len(uni_rand_vectors))
         if len(uni_rand_vectors) >= N:
             break
 
@@ -159,6 +158,32 @@ def assign_vectors(circ_centres, vectors, R, n):
     #print(len(centre_dic))
     return assigned_centres, centre_dic
 
+def assign_dict_vectors(circ_centres, vectors, R, n):
+    r = R / 4
+
+    # print(len(circ_centres))
+
+    assigned_centres = []
+    centre_dic = {}
+    for i in range(len(circ_centres)):
+        centre_dic[i] = []
+    #print(centre_dic)
+    #print(len(circ_centres))
+    for v in vectors.keys():
+        centre_index = 0
+        for centre in circ_centres:
+            if np.linalg.norm(vectors[v] - centre) <= r:
+                assigned_centres.append(centre_index)
+                centre_dic[centre_index].append(v)
+                break
+            centre_index += 1
+            if centre_index == 8**n:
+                print(vectors[v])
+
+                raise Exception("This ain't supposed to happen")
+    #print(len(centre_dic))
+    return assigned_centres, centre_dic
+
 
 def change_from_basis(B, S):
     basis_changed = []
@@ -253,8 +278,6 @@ def post_sieve_ball_fun(R, n):
     return final_ball_centres
 
 
-
-
 def sample_vectors(L, n, D, K, c_5, min_num_vectors):
     orthonormal_basis = np.identity(n)
     fi_basis = orthonormal_basis * D
@@ -276,7 +299,6 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
     # long_line = parallelepiped_in_standard_basis[0] + parallelepiped_in_standard_basis[1]
     # print(long_line)
     # print(np.linalg.norm(long_line))
-    print(type(perturbed_in_standard_basis))
     centre_indexes, centre_dic = assign_vectors(circ_centres, perturbed_in_standard_basis, R, n)
     no_reps, reps = choose_reps(centre_dic, min_num_vectors)
 
@@ -310,9 +332,9 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
             break
         else:
             R = R/2
-            current_xis_minus_ais = []
+            current_xis_minus_ais = {}
             for key in current_xis.keys():
-                current_xis_minus_ais.append(current_xis[key] - current_ais[key])
+                current_xis_minus_ais[key] = current_xis[key] - current_ais[key]
 
             # pp = []
             # for b in range(len(parallelepiped_in_standard_basis)):
@@ -321,12 +343,8 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
             #     pp = pp.append(basis_vec)
 
             circ_centres = post_sieve_ball_fun(R, n)
-            print("circ_centres run")
-            print(type(current_xis_minus_ais))
-            centr_int, centre_dictionary = assign_vectors(circ_centres, current_xis_minus_ais, R, n)
-            print("assign_vectors worky")
+            centr_int, centre_dictionary = assign_dict_vectors(circ_centres, current_xis_minus_ais, R, n)
             no_reps, reps = choose_reps(centre_dictionary, min_num_vectors)
-            print("all workin till here?")
             current_xis, current_ais, current_zis = sieve(current_xis, current_ais, current_zis, no_reps, reps)
 
     possible_vectors = []
@@ -346,7 +364,6 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
             sh_vec = vector
             #og_key = original_vector[it_index]
         #it_index += 1
-    print(len(sh_vec))
     print(sh_vec)
     print(sh_len)
     #print(each_sample_point[og_key])
