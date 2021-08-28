@@ -221,8 +221,6 @@ def choose_reps(centre_dic, min_num_vectors):
     # if len([item for subl in centre_dic.values() for item in subl]) < min_num_vectors:
     #     raise Exception("not enuf vectors")
 
-    #print(len(centre_dic.keys()))
-    #print(len(reps))
     return centre_dic, reps
 
 
