@@ -6,12 +6,15 @@ test = np.array([[1/math.sqrt(2), 1/math.sqrt(2)], [1,-1]])
 L = np.array([[4, 1, 1, 1], [5, 2, 2, 1], [3, 1, 3, 1], [2,5,6,1]])
 n = len(L[0])
 c_0 = 2
+#c_1 must be large enough that (N-O(n*2^(2*n)))*2^-O(log(n)) by lemmas 10, 11. Maybe add a check for this, three should work for 4d for 5d, 2 might work
+c_1 = 2 + math.log(n, 2)/n + 0.000001
 c_3 = 2
 c_5 = 4 * c_3
 D = 2 ** (c_0 * n)
-K = 1000  # Make sure this value works, described in Lemma 6
-min_num_vectors = 2 * 8 ** n
-N = 10 * min_num_vectors  # check what this number should be from the paper
+K = 100  # Make sure this value works, described in Lemma 6
+min_num_vectors = 2 * 8 ** n #Do not know why I at some point thought this'd be the minimum required amount of vectors, it isn't, the exception arising from this has been removed
+N = math.ceil(2**(n*c_1))
+print(N)
 
 def unitary_random_vectors(B, L, N, n):
     standard_basis_parallelepiped = np.matmul(B, L)
@@ -51,7 +54,7 @@ def unitary_random_vectors(B, L, N, n):
             # print("REJECTED")
             # print(rando_vec)
             pass
-        print(len(uni_rand_vectors))
+        #print(len(uni_rand_vectors))
         if len(uni_rand_vectors) >= N:
             break
 
@@ -178,6 +181,9 @@ def assign_dict_vectors(circ_centres, vectors, R, n):
                 break
             centre_index += 1
             if centre_index == 8**n:
+                print(8**n)
+                print(len(circ_centres))
+                print(R)
                 print(vectors[v])
 
                 raise Exception("This ain't supposed to happen")
@@ -212,8 +218,8 @@ def choose_reps(centre_dic, min_num_vectors):
 
 
 
-    if len([item for subl in centre_dic.values() for item in subl]) < min_num_vectors:
-        raise Exception("not enuf vectors")
+    # if len([item for subl in centre_dic.values() for item in subl]) < min_num_vectors:
+    #     raise Exception("not enuf vectors")
 
     #print(len(centre_dic.keys()))
     #print(len(reps))
@@ -252,7 +258,7 @@ def post_sieve_ball_fun(R, n):
         ball_centres_per_dimension.append([])
         for multiplier in range(8):
             ball_place = np.zeros(n)
-            ball_place[dimension] = -R*7/16 + R * multiplier/8
+            ball_place[dimension] = (-R*7/16 + R * multiplier/8)*2
             ball_centres_per_dimension[dimension].append(ball_place)
 
     final_ball_centres = []
