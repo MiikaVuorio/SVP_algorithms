@@ -1,9 +1,14 @@
 import numpy as np
 import random
 import math
+import time
 
-test = np.array([[1 / math.sqrt(2), 1 / math.sqrt(2)], [1, -1]])
-L = np.array([[4, 1, 1, 1], [5, 2, 2, 1], [3, 1, 3, 1], [2, 5, 6, 1]])
+two_D = np.array([[1 / math.sqrt(2), 1 / math.sqrt(2)], [1, -1]])
+three_D = np.array([[4, 1, 1], [5, 2, 2], [3, 1, 3]])
+four_D = np.array([[4, 1, 1, 1], [5, 2, 2, 1], [3, 1, 3, 1], [2, 5, 6, 1]])
+five_D = np.array([[4, 1, 1, 1, 1], [5, 2, 2, 1, 4], [3, 1, 3, 1, 5], [2, 5, 6, 1, 1], [3, 1, 5, 6, 5]])
+six_D = np.array([[1, 0, 6, 6, 0, 5], [3, 4, 3, 5, 1, 1], [3, 0, 4, 1, 3, 2], [3, 5, 6, 5, 6, 5], [2, 2, 0, 0, 5, 0], [4, 0, 2, 1, 5, 1]])
+L = six_D
 n = len(L[0])
 c_0 = 1.4
 c_1 = 2 + math.log(n, 2) / n + 0.000001
@@ -11,12 +16,14 @@ c_3 = 2
 c_5 = 4 * c_3
 D = math.ceil(2 ** (c_0 * n) + 60)
 K = math.ceil(math.log(2**(4*math.log(n, 2)/n)) + math.log(2**16) + 8.000001)
-print(K)
 min_num_vectors = 2 * 8 ** n  # Isn't an actual requirement, the exception from this has been removed
 N = math.ceil(2 ** (n * c_1))
-
+#print(N)
 
 def unitary_random_vectors(B, L, N, n):
+    failed = 0
+    success = 0
+    total = 0
     standard_basis_parallelepiped = np.matmul(B, L)
     uni_rand_vectors = []
     while True:
@@ -43,6 +50,8 @@ def unitary_random_vectors(B, L, N, n):
             v_norm = np.linalg.norm(v)
             if dot < 0 or dot / v_norm > v_norm or np.linalg.norm(rand_vec_standard_basis) == 0:
                 in_parallelepiped = False
+                failed += 1
+                #total += 1
                 break
 
         #Check for duplicates
@@ -59,11 +68,19 @@ def unitary_random_vectors(B, L, N, n):
 
         if in_parallelepiped:
             uni_rand_vectors.append(rando_vec)
+            #total += 1
+            #success += 1
         else:
             pass
+        #print(str(failed/total) + str(success))
+        #if success % 100 == 0:
+        #    print(success)
         if len(uni_rand_vectors) >= N:
             break
-
+    print(failed)
+    print(failed + N)
+    print("portion of samples that failed:")
+    print(failed/(failed+N))
     return uni_rand_vectors
 
 def chec_for_duplicates(vectors):
@@ -181,6 +198,7 @@ def assign_vectors(circ_centres, vectors, R, n):
 
 
 def assign_dict_vectors(circ_centres, vectors, R, n):
+    final_centre = len(circ_centres)
     r = R / 4
 
     assigned_centres = []
@@ -196,11 +214,14 @@ def assign_dict_vectors(circ_centres, vectors, R, n):
                 centre_dic[centre_index].append(v)
                 break
             centre_index += 1
-            if centre_index == 8 ** n:
+            if centre_index == final_centre:
+                print(circ_centres)
                 print(8 ** n)
                 print(len(circ_centres))
                 print(R)
                 print(vectors[v])
+                print(np.linalg.norm(vectors[v]-circ_centres[final_centre - 1]))
+                print(r)
 
                 raise Exception("A vector wasn't in any of the balls")
 
@@ -270,7 +291,7 @@ def post_sieve_ball_fun(R, n):
         ball_centres_per_dimension.append([])
         for multiplier in range(8):
             ball_place = np.zeros(n)
-            ball_place[dimension] = (-R * 7 / 16 + R * multiplier / 8) * 2
+            ball_place[dimension] = (-R * 7 / 16 + R * multiplier / 8) * 1.2
             ball_centres_per_dimension[dimension].append(ball_place)
 
     final_ball_centres = []
@@ -287,6 +308,7 @@ def post_sieve_ball_fun(R, n):
         ball_centres = []
         for biko in final_ball_centres:
             ball_centres.append(biko)
+    final_ball_centres.append(np.zeros(n))
 
     return final_ball_centres
 
@@ -296,11 +318,15 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
     fi_basis = orthonormal_basis * D
     fi_in_lattice_basis = np.matmul(fi_basis, np.linalg.inv(L))
     fi_rint_L_basis = np.rint(fi_in_lattice_basis)
-    print("len of sample_points:")
+    #print("len of sample_points:")
+    sample_start = time.time()
     each_sample_point = unitary_random_vectors(fi_rint_L_basis, L, N, n)
-    print(len(each_sample_point))
-    print("num of duplicates")
-    print(chec_for_duplicates(each_sample_point))
+    sample_end = time.time()
+    #print(len(each_sample_point))
+    #print("num of duplicates:")
+    #print(chec_for_duplicates(each_sample_point))
+    sample_time = sample_end - sample_start
+    print("time for sample: " + str(sample_time))
     zis_in_standard_basis = change_from_basis(L, each_sample_point)
     zis = to_dic(zis_in_standard_basis)
     perturbed_samples, perturbations = add_perturbation(each_sample_point, K, n)
@@ -332,7 +358,7 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
             if diff == 0:
                 zeros += 1
             tot_sum += diff
-        print(zeros)
+        #print(zeros)
         print(tot_sum / len(survivors))
 
         if smalls == len(survivors):
@@ -359,9 +385,12 @@ def sample_vectors(L, n, D, K, c_5, min_num_vectors):
         if vec_len < sh_len and vec_len != 0:
             sh_len = vec_len
             sh_vec = vector
+            sh_len = vec_len
 
     print(sh_vec)
     print(sh_len)
 
-
+start_time = time.time()
 sample_vectors(L, n, D, K, c_5, min_num_vectors)
+end_time = time.time()
+print("program time: " + str(end_time-start_time))
